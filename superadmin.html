@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<title>Super Admin</title>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen">
+
+<!-- 🔐 SESSION CHECK -->
+<script>
+if (localStorage.getItem("superadmin_session") !== "active") {
+  window.location.href = "/superadmin-login.html";
+}
+</script>
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-10 bg-slate-950/80 backdrop-blur border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400"></div>
+      <div>
+        <p class="text-sm text-white/70 leading-4">MASRUF IFTY</p>
+        <p class="font-semibold leading-5">Super Admin</p>
+      </div>
+    </div>
+
+     <div class="flex gap-3">
+      <a href="dashboard.html" class="px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">
+        Dashboard
+      </a>
+      <button onclick="logout()" id="refreshBtn" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm">
+        Logout
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<main class="max-w-7xl mx-auto px-6 py-10">
+
+  <div class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-tight">
+      Manage System Records
+    </h1>
+    <p class="text-white/60 mt-2 text-sm">
+      Permanently delete booking entries. This action cannot be undone.
+    </p>
+  </div>
+
+  <!-- Table Container -->
+  <div class="bg-white/5 border border-white/10 rounded-3xl shadow-xl overflow-hidden">
+
+    <div class="w-full overflow-x-auto">
+      <table class="min-w-[850px] w-full text-sm">
+
+        <thead class="bg-white/5 text-white/80">
+          <tr>
+            <th class="text-left px-6 py-4">ID</th>
+            <th class="text-left px-6 py-4">Client Name</th>
+            <th class="text-left px-6 py-4">Package</th>
+            <th class="text-left px-6 py-4">Total</th>
+            <th class="text-left px-6 py-4">Status</th>
+            <th class="text-left px-6 py-4">Action</th>
+          </tr>
+        </thead>
+
+        <tbody id="rows" class="divide-y divide-white/10"></tbody>
+
+      </table>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+const rowsEl = document.getElementById("rows");
+
+async function load(){
+  const res = await fetch("/.netlify/functions/list-bookings");
+  const data = await res.json();
+
+  rowsEl.innerHTML = "";
+
+  if (!data.bookings || data.bookings.length === 0) {
+    rowsEl.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-10 text-white/60">
+          No bookings found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  data.bookings.forEach(b => {
+    const tr = document.createElement("tr");
+    tr.className = "hover:bg-white/5 transition";
+
+    tr.innerHTML = `
+      <td class="px-6 py-4 whitespace-nowrap text-white/70">${b.id}</td>
+      <td class="px-6 py-4 font-semibold whitespace-nowrap">${b.name}</td>
+      <td class="px-6 py-4 max-w-[18rem]">${b.package_name}</td>
+      <td class="px-6 py-4 font-bold text-emerald-300 whitespace-nowrap">£${b.total_price}</td>
+      <td class="px-6 py-4 whitespace-nowrap">${b.status}</td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <button onclick="deleteBooking(${b.id})"
+          class="px-4 py-2 text-sm rounded-xl bg-rose-600/90 hover:bg-rose-500 transition font-medium">
+          Delete Permanently
+        </button>
+      </td>
+    `;
+
+    rowsEl.appendChild(tr);
+  });
+}
+
+async function deleteBooking(id){
+  if (!confirm("Are you sure? This action cannot be undone.")) return;
+
+  const res = await fetch("/.netlify/functions/delete-booking", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id })
+  });
+
+  const data = await res.json();
+
+  if(res.ok){
+    load();
+  } else {
+    alert(data.error);
+  }
+}
+
+function logout(){
+  localStorage.removeItem("superadmin_session");
+  window.location.href = "/superadmin-login.html";
+}
+
+load();
+</script>
+
+</body>
+</html>

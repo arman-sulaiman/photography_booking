@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Read client reviews for Masruf Ifty Photography in London." />
+<link rel="canonical" href="https://masruf-ifty.me/reviewsbyclients.html" />
+<script src="https://cdn.tailwindcss.com"></script>
+<title>Client Reviews | Masruf Ifty Photography</title>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-6">
+
+<div class="max-w-3xl w-full">
+  <h2 class="text-3xl font-bold text-center mb-10">What Clients Say</h2>
+
+  <div id="carousel" class="relative bg-white/5 border border-white/10 rounded-3xl p-8 shadow-xl min-h-[220px] flex flex-col justify-center text-center transition">
+    <p id="reviewMessage" class="text-lg mb-6"></p>
+    <p id="reviewStars" class="text-emerald-400 mb-2"></p>
+    <p id="reviewName" class="text-white/70"></p>
+  </div>
+
+  <div class="flex justify-center gap-6 mt-6">
+    <button onclick="prev()" class="px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20">Previous</button>
+    <button onclick="next()" class="px-4 py-2 bg-white/10 rounded-xl hover:bg-white/20">Next</button>
+  </div>
+</div>
+
+<script>
+let reviews = [];
+let current = 0;
+
+function render(){
+  if(reviews.length === 0) return;
+
+  const r = reviews[current];
+
+  document.getElementById("reviewMessage").textContent = `"${r.message}"`;
+  document.getElementById("reviewStars").textContent = "★".repeat(r.rating);
+  document.getElementById("reviewName").textContent = `— ${r.name}`;
+}
+
+function next(){
+  current = (current + 1) % reviews.length;
+  render();
+}
+
+function prev(){
+  current = (current - 1 + reviews.length) % reviews.length;
+  render();
+}
+
+async function load(){
+  const res = await fetch("/.netlify/functions/list-reviews");
+  const data = await res.json();
+  reviews = data.reviews || [];
+  render();
+}
+
+setInterval(next, 5000);
+load();
+</script>
+
+</body>
+</html>

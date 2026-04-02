@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<title>Admin Login</title>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen flex flex-col">
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-10 bg-slate-950/80 backdrop-blur border-b border-white/10">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400"></div>
+      <div>
+        <p class="text-sm text-white/70 leading-4">MASRUF IFTY</p>
+        <p class="font-semibold leading-5">Secure Access</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== LOGIN SECTION ===== -->
+<main class="flex-1 flex items-center justify-center px-6 py-12">
+
+  <div class="w-full max-w-md">
+
+    <!-- Card -->
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl">
+
+      <h2 class="text-3xl font-bold text-center mb-2">
+        Welcome Back
+      </h2>
+
+      <p class="text-white/60 text-center mb-8 text-sm">
+        Please enter your credentials to continue.
+      </p>
+
+      <!-- Username -->
+      <div class="mb-5">
+        <label class="block text-sm text-white/70 mb-2">
+          Username
+        </label>
+        <input 
+          id="username"
+          type="text"
+          placeholder="Enter username"
+          class="w-full px-4 py-3 rounded-2xl bg-slate-900/70 border border-white/10 outline-none focus:border-emerald-400/60 transition"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="mb-6">
+        <label class="block text-sm text-white/70 mb-2">
+          Password
+        </label>
+        <input 
+          id="password"
+          type="password"
+          placeholder="Enter password"
+          class="w-full px-4 py-3 rounded-2xl bg-slate-900/70 border border-white/10 outline-none focus:border-emerald-400/60 transition"
+        />
+      </div>
+
+      <!-- Login Button -->
+      <button 
+        onclick="login()"
+        class="w-full px-6 py-4 rounded-2xl font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 hover:opacity-95 transition">
+        Sign In
+      </button>
+
+      <!-- Error Message -->
+      <p id="error" class="text-center text-rose-400 mt-6 text-sm"></p>
+
+    </div>
+
+    <!-- Footer Text -->
+    <p class="text-center text-white/40 text-xs mt-6">
+      Secure administrative access only.
+    </p>
+
+  </div>
+
+</main>
+
+
+
+
+<!-- ===== SCRIPT (UNCHANGED FUNCTIONALITY) ===== -->
+<script> async function login() { const username = document.getElementById("username").value; const password = document.getElementById("password").value; const res = await fetch("/.netlify/functions/superadmin-login", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ username, password }) }); const data = await res.json(); if (res.ok) { localStorage.setItem("superadmin_session", "active"); window.location.href="/dashboard.html"; } else { document.getElementById("error").textContent = data.error; } } </script>
+
+</body>
+</html>

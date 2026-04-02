@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://masruf-ifty.me/sitemap.xml

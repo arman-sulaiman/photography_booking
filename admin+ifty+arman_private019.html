@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bookings Admin | Masruf Ifty Photography</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<script>
+if (localStorage.getItem("superadmin_session") !== "active") window.location.href = "/superadmin-login.html";
+</script>
+<body class="bg-slate-950 text-white min-h-screen">
+<header class="sticky top-0 z-10 bg-slate-950/80 backdrop-blur border-b border-white/10">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3"><div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400"></div><div><p class="text-sm text-white/70">Admin</p><p class="font-semibold">Bookings</p></div></div>
+    <div class="flex gap-3"><a href="dashboard.html" class="px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">Dashboard</a><a href="finance.html" class="px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">Finance</a><button onclick="logout()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm">Logout</button></div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-10">
+  <div class="flex flex-col md:flex-row justify-between gap-6">
+    <div><h1 class="text-3xl font-bold">Booking Information</h1><p class="text-white/60 mt-2">Manage status, edit booking details and trigger update emails.</p></div>
+    <div class="flex gap-4"><div class="bg-white/5 border border-white/10 rounded-2xl px-6 py-4"><p class="text-xs text-white/60">Total bookings</p><p id="countText" class="text-xl font-semibold">0</p></div><div class="bg-white/5 border border-white/10 rounded-2xl px-6 py-4"><p class="text-xs text-white/60">Last update</p><p id="lastUpdateText" class="text-xl font-semibold">—</p></div></div>
+  </div>
+
+  <div class="hidden md:block mt-10 bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-white/5 text-white/80"><tr><th class="px-4 py-4 text-left">Booking ID</th><th class="px-4 py-4 text-left">Created</th><th class="px-4 py-4 text-left">Shooting Date</th><th class="px-4 py-4 text-left">Client</th><th class="px-4 py-4 text-left">Package</th><th class="px-4 py-4 text-left">Total</th><th class="px-4 py-4 text-left">Status</th><th class="px-4 py-4 text-left">Actions</th></tr></thead>
+      <tbody id="tableRows" class="divide-y divide-white/10"></tbody>
+    </table>
+  </div>
+  <div id="mobileCards" class="md:hidden mt-8 space-y-4"></div>
+  <p id="errorText" class="mt-6 text-rose-400 text-sm"></p>
+</main>
+
+<div id="editModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm p-4 z-50 overflow-y-auto">
+  <div class="max-w-3xl mx-auto my-8 bg-slate-900 border border-white/10 rounded-3xl p-6">
+    <div class="flex items-center justify-between gap-4">
+      <div><h2 class="text-2xl font-bold">Edit Booking</h2><p class="text-white/60 text-sm mt-1">Update booking info and amount. The client will receive an email after saving.</p></div>
+      <button onclick="closeEditModal()" class="px-4 py-2 rounded-xl border border-white/15 hover:bg-white/5">Close</button>
+    </div>
+    <form id="editForm" class="mt-8 grid gap-4">
+      <input type="hidden" name="id" />
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-sm text-white/70">Booking ID</label><input name="booking_id" disabled class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3 opacity-80"/></div>
+        <div><label class="block text-sm text-white/70">Status</label><select name="status" class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"><option>Pending</option><option>Done</option><option>Cancelled</option></select></div>
+        <div><label class="block text-sm text-white/70">Name</label><input name="name" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+        <div><label class="block text-sm text-white/70">Phone</label><input name="phone" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+        <div><label class="block text-sm text-white/70">Email</label><input name="email" type="email" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+        <div><label class="block text-sm text-white/70">Shooting Date & Time</label><input name="shooting_datetime" type="datetime-local" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+      </div>
+      <div><label class="block text-sm text-white/70">Address</label><textarea name="address" rows="3" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"></textarea></div>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div><label class="block text-sm text-white/70">Package ID</label><input name="package_id" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+        <div><label class="block text-sm text-white/70">Package Name</label><input name="package_name" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+        <div><label class="block text-sm text-white/70">Package Price</label><input name="package_price" type="number" step="0.01" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div><label class="block text-sm text-white/70">Total Amount</label><input name="total_price" type="number" step="0.01" required class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+        <div><label class="block text-sm text-white/70">Extra edit quantity</label><input name="extra_edit_qty" type="number" min="0" class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"/></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"><input type="checkbox" name="addon_extra_edit" class="h-4 w-4 accent-emerald-400"><span>Extra edit</span></label>
+        <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"><input type="checkbox" name="addon_video" class="h-4 w-4 accent-emerald-400"><span>Video reel</span></label>
+        <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"><input type="checkbox" name="addon_express" class="h-4 w-4 accent-emerald-400"><span>Express delivery</span></label>
+        <label class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4"><input type="checkbox" name="addon_travel_outside" class="h-4 w-4 accent-emerald-400"><span>Travel outside city</span></label>
+      </div>
+      <div><label class="block text-sm text-white/70">Notes</label><textarea name="notes" rows="4" class="mt-2 w-full rounded-2xl bg-slate-800 border border-white/10 px-4 py-3"></textarea></div>
+      <div class="flex flex-wrap gap-3 justify-end pt-2"><button type="button" onclick="closeEditModal()" class="px-5 py-3 rounded-2xl border border-white/15 hover:bg-white/5">Cancel</button><button id="saveEditBtn" type="submit" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 font-semibold">Save Changes</button></div>
+      <p id="editStatus" class="text-sm"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+const tableRows = document.getElementById('tableRows');
+const mobileCards = document.getElementById('mobileCards');
+const countText = document.getElementById('countText');
+const lastUpdateText = document.getElementById('lastUpdateText');
+const errorText = document.getElementById('errorText');
+const editModal = document.getElementById('editModal');
+const editForm = document.getElementById('editForm');
+const editStatus = document.getElementById('editStatus');
+const f = name => editForm.elements[name];
+let bookingsCache = [];
+function formatDate(value){ if(!value) return '—'; const d = new Date(value); if (isNaN(d)) return '—'; const day = String(d.getDate()).padStart(2, '0'); const month = String(d.getMonth()+1).padStart(2, '0'); const year = d.getFullYear(); const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); return `${day}/${month}/${year}, ${time}`; }
+function toDateTimeLocal(value){ if(!value) return ''; const d = new Date(value); if (isNaN(d)) return ''; const pad = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function addonSummary(b){ const parts = []; if(b.addon_extra_edit === 'yes') parts.push(`Extra edit (${b.extra_edit_qty || 0})`); if(b.addon_video === 'yes') parts.push('Video reel'); if(b.addon_express === 'yes') parts.push('Express delivery'); if(b.addon_travel_outside === 'yes') parts.push('Travel outside city'); return parts.length ? parts.join(', ') : 'None'; }
+function statusBadge(status){ const map = { Pending:'bg-yellow-500/20 text-yellow-300 border-yellow-400/40', Done:'bg-emerald-500/20 text-emerald-300 border-emerald-400/40', Cancelled:'bg-rose-500/20 text-rose-300 border-rose-400/40' }; return `<span class="px-3 py-1 text-xs rounded-full border ${map[status] || map.Pending}">${status}</span>`; }
+async function updateStatus(id, status){ try { const res = await fetch('/.netlify/functions/update-status', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id, status }) }); const out = await res.json(); if(!res.ok) throw new Error(out.error || 'Update failed'); load(); } catch(err){ alert('Status update failed: ' + err.message); } }
+function openEditModal(id){ const b = bookingsCache.find(item => String(item.id) === String(id)); if(!b) return; f('id').value = b.id; f('booking_id').value = b.booking_id || ''; f('status').value = b.status || 'Pending'; f('name').value = b.name || ''; f('phone').value = b.phone || ''; f('email').value = b.email || ''; f('shooting_datetime').value = toDateTimeLocal(b.shooting_datetime); f('address').value = b.address || ''; f('package_id').value = b.package_id || ''; f('package_name').value = b.package_name || ''; f('package_price').value = Number(b.package_price || 0); f('total_price').value = Number(b.total_price || 0); f('extra_edit_qty').value = Number(b.extra_edit_qty || 0); f('notes').value = b.notes || ''; f('addon_extra_edit').checked = b.addon_extra_edit === 'yes'; f('addon_video').checked = b.addon_video === 'yes'; f('addon_express').checked = b.addon_express === 'yes'; f('addon_travel_outside').checked = b.addon_travel_outside === 'yes'; editStatus.textContent = ''; editModal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeEditModal(){ editModal.classList.add('hidden'); document.body.style.overflow = ''; }
+editForm.addEventListener('submit', async (e) => { e.preventDefault(); const btn = document.getElementById('saveEditBtn'); btn.disabled = true; editStatus.textContent = ''; const fd = new FormData(editForm); const payload = Object.fromEntries(fd.entries()); payload.addon_extra_edit = f('addon_extra_edit').checked ? 'yes' : 'no'; payload.addon_video = f('addon_video').checked ? 'yes' : 'no'; payload.addon_express = f('addon_express').checked ? 'yes' : 'no'; payload.addon_travel_outside = f('addon_travel_outside').checked ? 'yes' : 'no'; try { const res = await fetch('/.netlify/functions/update-booking', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }); const out = await res.json(); if(!res.ok) throw new Error(out.error || 'Update failed'); editStatus.className = 'text-sm text-emerald-300'; editStatus.textContent = 'Booking updated successfully.'; await load(); setTimeout(closeEditModal, 600); } catch(err){ editStatus.className = 'text-sm text-rose-300'; editStatus.textContent = err.message; } finally { btn.disabled = false; } });
+async function load(){ try{ const res = await fetch('/.netlify/functions/list-bookings'); const data = await res.json(); const bookings = data.bookings || []; bookingsCache = bookings; countText.textContent = bookings.length; lastUpdateText.textContent = new Date().toLocaleTimeString(); tableRows.innerHTML = ''; mobileCards.innerHTML = ''; bookings.forEach(b => { const tr = document.createElement('tr'); tr.className = 'hover:bg-white/5 transition'; tr.innerHTML = `<td class="px-4 py-4 font-semibold text-emerald-300">${b.booking_id || '—'}</td><td class="px-4 py-4">${formatDate(b.created_at)}</td><td class="px-4 py-4">${formatDate(b.shooting_datetime)}</td><td class="px-4 py-4"><div class="font-semibold">${b.name}</div><div class="text-white/60 text-xs">${b.phone}</div><div class="text-white/60 text-xs">${b.email}</div></td><td class="px-4 py-4"><div>${b.package_name}</div><div class="text-xs text-white/50 mt-1">${addonSummary(b)}</div></td><td class="px-4 py-4 font-bold text-emerald-300">£${Number(b.total_price).toFixed(2)}</td><td class="px-4 py-4">${statusBadge(b.status)}</td><td class="px-4 py-4"><div class="flex flex-col gap-2"><button onclick="openEditModal('${b.id}')" class="min-w-[90px] text-sm px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 transition">Edit</button><button onclick="updateStatus('${b.id}','Done')" class="min-w-[90px] text-sm px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 transition">Done</button><button onclick="updateStatus('${b.id}','Cancelled')" class="min-w-[90px] text-sm px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 transition">Cancel</button></div></td>`; tableRows.appendChild(tr); const card = document.createElement('div'); card.className = 'bg-white/5 border border-white/10 rounded-2xl p-5'; card.innerHTML = `<div class="flex justify-between gap-4"><div><p class="font-semibold text-emerald-300">${b.booking_id || '—'}</p><p class="font-semibold mt-2">${b.name}</p><p class="text-white/60 text-sm">${b.phone}</p><p class="text-white/60 text-sm">${b.email}</p></div>${statusBadge(b.status)}</div><div class="mt-3 text-sm text-white/70 space-y-1"><div><span class="text-white/50">Address:</span> ${b.address}</div><div><span class="text-white/50">Shooting:</span> ${formatDate(b.shooting_datetime)}</div><div><span class="text-white/50">Package:</span> ${b.package_name}</div><div><span class="text-white/50">Add-ons:</span> ${addonSummary(b)}</div><div><span class="text-white/50">Total:</span> £${Number(b.total_price).toFixed(2)}</div></div><div class="mt-4 flex flex-col gap-3"><button onclick="openEditModal('${b.id}')" class="px-3 py-2 text-sm rounded-xl bg-cyan-500/20 hover:bg-cyan-500/40">Edit</button><button onclick="updateStatus('${b.id}','Done')" class="px-3 py-2 text-sm rounded-xl bg-emerald-500/20 hover:bg-emerald-500/40">Done</button><button onclick="updateStatus('${b.id}','Cancelled')" class="px-3 py-2 text-sm rounded-xl bg-rose-500/20 hover:bg-rose-500/40">Cancel</button></div>`; mobileCards.appendChild(card); }); } catch(err){ errorText.textContent = 'Failed to load bookings.'; } }
+function logout(){ localStorage.removeItem('superadmin_session'); window.location.href = '/superadmin-login.html'; }
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance | Masruf Ifty Photography</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+<script>if (localStorage.getItem('superadmin_session') !== 'active') window.location.href = '/superadmin-login.html';</script>
+<header class="sticky top-0 z-10 bg-slate-950/80 backdrop-blur border-b border-white/10"><div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between"><div class="flex items-center gap-3"><div class="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-400"></div><div><p class="text-sm text-white/70">Admin</p><p class="font-semibold">Finance</p></div></div><div class="flex gap-3"><a href="dashboard.html" class="px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">Dashboard</a><a href="admin+ifty+arman_private019.html" class="px-4 py-2 rounded-xl border border-white/20 hover:bg-white/10 text-sm">Bookings</a></div></div></header>
+<main class="max-w-7xl mx-auto px-6 py-10">
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6"><div><h1 class="text-3xl font-bold">Finance Overview</h1><p class="text-white/60 mt-2">Track monthly booking income, expenses and revenue.</p></div><div><label class="text-sm text-white/60">Month</label><input id="monthPicker" type="month" class="mt-2 rounded-2xl bg-slate-900 border border-white/10 px-4 py-3" /></div></div>
+  <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-6 mt-8">
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-6"><p class="text-white/50">Booked Income</p><p id="bookedIncome" class="text-3xl font-bold text-cyan-300 mt-3">£0.00</p></div>
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-6"><p class="text-white/50">Received Income</p><p id="receivedIncome" class="text-3xl font-bold text-emerald-300 mt-3">£0.00</p></div>
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-6"><p class="text-white/50">Expenses</p><p id="expensesTotal" class="text-3xl font-bold text-rose-300 mt-3">£0.00</p></div>
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-6"><p class="text-white/50">Revenue</p><p id="revenueTotal" class="text-3xl font-bold text-emerald-300 mt-3">£0.00</p></div>
+  </div>
+  <div class="grid lg:grid-cols-[1.1fr_.9fr] gap-8 mt-10">
+    <section class="bg-white/5 border border-white/10 rounded-3xl p-6"><div class="flex items-center justify-between gap-4"><div><h2 class="text-2xl font-semibold">Expenses</h2><p class="text-white/60 text-sm mt-1">Add and review monthly expenses.</p></div></div><form id="expenseForm" class="grid gap-4 mt-6"><div class="grid md:grid-cols-2 gap-4"><input name="title" required placeholder="Expense title" class="rounded-2xl bg-slate-900 border border-white/10 px-4 py-3" /><input name="amount" type="number" step="0.01" required placeholder="Amount" class="rounded-2xl bg-slate-900 border border-white/10 px-4 py-3" /></div><div class="grid md:grid-cols-2 gap-4"><input name="expense_date" type="date" class="rounded-2xl bg-slate-900 border border-white/10 px-4 py-3" /><input name="notes" placeholder="Optional notes" class="rounded-2xl bg-slate-900 border border-white/10 px-4 py-3" /></div><div class="flex flex-wrap gap-3 items-center"><button class="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 font-semibold">Add Expense</button><p id="expenseStatus" class="text-sm"></p></div></form><div id="expenseList" class="mt-8 space-y-3"></div></section>
+    <section class="bg-white/5 border border-white/10 rounded-3xl p-6"><h2 class="text-2xl font-semibold">Monthly Snapshot</h2><div id="snapshot" class="mt-6 space-y-4 text-white/70"></div></section>
+  </div>
+</main>
+<script>
+const monthPicker = document.getElementById('monthPicker');
+const gbp = n => `£${Number(n || 0).toFixed(2)}`;
+monthPicker.value = new Date().toISOString().slice(0,7);
+async function loadFinance(){ const month = monthPicker.value; const res = await fetch(`/.netlify/functions/list-finance?month=${month}`); const data = await res.json(); if(!res.ok) throw new Error(data.error || 'Failed to load finance'); document.getElementById('bookedIncome').textContent = gbp(data.summary.booked_income); document.getElementById('receivedIncome').textContent = gbp(data.summary.received_income); document.getElementById('expensesTotal').textContent = gbp(data.summary.expenses_total); document.getElementById('revenueTotal').textContent = gbp(data.summary.revenue); document.getElementById('snapshot').innerHTML = `<div class="rounded-2xl border border-white/10 bg-slate-900/40 p-4"><p>Active bookings this month: <strong>${data.summary.active_bookings}</strong></p></div><div class="rounded-2xl border border-white/10 bg-slate-900/40 p-4"><p>Completed bookings this month: <strong>${data.summary.done_bookings}</strong></p></div><div class="rounded-2xl border border-white/10 bg-slate-900/40 p-4"><p>Revenue formula: <strong>received income − expenses</strong></p></div>`; document.getElementById('expenseList').innerHTML = data.expenses.length ? data.expenses.map(x => `<div class="rounded-2xl border border-white/10 bg-slate-900/40 p-4 flex items-start justify-between gap-4"><div><p class="font-semibold">${x.title}</p><p class="text-white/50 text-sm mt-1">${x.expense_date}${x.notes ? ` • ${x.notes}` : ''}</p></div><p class="font-bold text-rose-300">${gbp(x.amount)}</p></div>`).join('') : `<p class="text-white/50">No expenses added for this month.</p>`; }
+monthPicker.addEventListener('change', loadFinance);
+document.getElementById('expenseForm').addEventListener('submit', async (e) => { e.preventDefault(); const status = document.getElementById('expenseStatus'); status.textContent = ''; const payload = Object.fromEntries(new FormData(e.target).entries()); if(!payload.expense_date) payload.expense_date = `${monthPicker.value}-01`; const res = await fetch('/.netlify/functions/add-expense', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) }); const data = await res.json(); if(!res.ok){ status.className = 'text-sm text-rose-300'; status.textContent = data.error || 'Failed to add expense'; return; } e.target.reset(); status.className = 'text-sm text-emerald-300'; status.textContent = 'Expense added.'; loadFinance(); });
+loadFinance();
+</script>
+</body>
+</html>

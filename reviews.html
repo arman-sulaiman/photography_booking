@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<script src="https://cdn.tailwindcss.com"></script>
+<title>Leave a Review</title>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-6">
+
+<div class="bg-white/5 border border-white/10 rounded-3xl p-8 w-full max-w-lg shadow-xl">
+  <h2 class="text-3xl font-bold mb-6 text-center">Leave a Review</h2>
+
+  <input id="name" placeholder="Your Name"
+    class="w-full mb-4 px-4 py-3 rounded-xl bg-slate-900 border border-white/10"/>
+
+  <select id="rating"
+    class="w-full mb-4 px-4 py-3 rounded-xl bg-slate-900 border border-white/10">
+    <option value="">Select Rating</option>
+    <option value="5">★★★★★ (5)</option>
+    <option value="4">★★★★☆ (4)</option>
+    <option value="3">★★★☆☆ (3)</option>
+    <option value="2">★★☆☆☆ (2)</option>
+    <option value="1">★☆☆☆☆ (1)</option>
+  </select>
+
+  <textarea id="message" rows="4" placeholder="Write your experience..."
+    class="w-full mb-6 px-4 py-3 rounded-xl bg-slate-900 border border-white/10"></textarea>
+
+  <button onclick="submitReview()"
+    class="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 font-semibold py-3 rounded-xl hover:opacity-90">
+    Submit Review
+  </button>
+
+  <p id="status" class="text-center mt-4 text-sm"></p>
+</div>
+
+<script>
+async function submitReview(){
+  const name = document.getElementById("name").value;
+  const rating = document.getElementById("rating").value;
+  const message = document.getElementById("message").value;
+
+  const res = await fetch("/.netlify/functions/create-review", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ name, rating, message })
+  });
+
+  const data = await res.json();
+
+  if(res.ok){
+    document.getElementById("status").textContent = "Review submitted successfully.";
+    document.getElementById("status").className = "text-emerald-400 mt-4 text-sm text-center";
+  } else {
+    document.getElementById("status").textContent = data.error;
+    document.getElementById("status").className = "text-rose-400 mt-4 text-sm text-center";
+  }
+}
+</script>
+
+</body>
+</html>
